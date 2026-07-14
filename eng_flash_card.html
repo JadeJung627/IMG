@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>영어 표현 플래시카드</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: #f4f3ef;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 40px;
+  }
+  h1 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #2c2c2a;
+    margin: 8px 0 4px;
+  }
+  .sub {
+    font-size: 13px;
+    color: #888780;
+    margin-bottom: 20px;
+  }
+  .progress {
+    font-size: 14px;
+    color: #5f5e5a;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .card {
+    width: 100%;
+    max-width: 400px;
+    min-height: 260px;
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #e5e3db;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px 24px;
+    cursor: pointer;
+    user-select: none;
+    gap: 16px;
+    transition: transform 0.15s ease;
+  }
+  .card:active { transform: scale(0.98); }
+  .label {
+    font-size: 12px;
+    color: #b4b2a9;
+    letter-spacing: 0.02em;
+  }
+  .mean {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c2c2a;
+    line-height: 1.4;
+  }
+  .expr {
+    font-size: 22px;
+    font-weight: 600;
+    color: #185fa5;
+    line-height: 1.4;
+  }
+  .example {
+    font-size: 15px;
+    color: #5f5e5a;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+  .hint {
+    font-size: 12px;
+    color: #b4b2a9;
+    margin-top: 8px;
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+    margin-top: 20px;
+  }
+  button {
+    flex: 1;
+    padding: 14px 0;
+    border-radius: 12px;
+    border: 1px solid #d3d1c7;
+    background: #ffffff;
+    font-size: 15px;
+    font-weight: 500;
+    color: #2c2c2a;
+    cursor: pointer;
+  }
+  button:active { background: #f1efe8; }
+  #flipBtn { background: #2c2c2a; color: #fff; border: none; }
+  .dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 24px;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #d3d1c7;
+  }
+  .dot.active { background: #185fa5; width: 18px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+  <h1>타일러 X 위베어베어스 시즌1</h1>
+  <div class="sub">1일차 · 실전 표현 플래시카드</div>
+  <div class="progress" id="progress">1 / 3</div>
+
+  <div class="card" id="card">
+    <div id="front">
+      <div class="label">뜻</div>
+      <div class="mean" id="mean"></div>
+      <div class="hint">탭해서 뒤집기</div>
+    </div>
+    <div id="back" style="display:none;">
+      <div class="label">영어 표현</div>
+      <div class="expr" id="expr"></div>
+      <div class="example" id="example"></div>
+    </div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="controls">
+    <button id="prevBtn">이전</button>
+    <button id="flipBtn">뒤집기</button>
+    <button id="nextBtn">다음</button>
+  </div>
+
+<script>
+  const cards = [
+    { mean: "네가 자랑스러워", expr: "I'm proud of you.", example: "I heard you passed the exam. I'm so proud of you." },
+    { mean: "잠깐 기다려봐", expr: "Wait a sec.", example: "Wait a sec, let me grab my keys." },
+    { mean: "생각했던 것보다 힘들 것 같아", expr: "This is gonna be tougher than I thought.", example: "This report is gonna be tougher than I thought." }
+  ];
+
+  let i = 0;
+  let flipped = false;
+
+  const front = document.getElementById('front');
+  const back = document.getElementById('back');
+  const meanEl = document.getElementById('mean');
+  const exprEl = document.getElementById('expr');
+  const exampleEl = document.getElementById('example');
+  const progress = document.getElementById('progress');
+  const card = document.getElementById('card');
+  const dotsWrap = document.getElementById('dots');
+
+  function buildDots() {
+    dotsWrap.innerHTML = '';
+    cards.forEach((_, idx) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (idx === i ? ' active' : '');
+      dotsWrap.appendChild(d);
+    });
+  }
+
+  function render() {
+    const c = cards[i];
+    meanEl.textContent = c.mean;
+    exprEl.textContent = c.expr;
+    exampleEl.textContent = c.example;
+    progress.textContent = (i + 1) + ' / ' + cards.length;
+    flipped = false;
+    front.style.display = 'flex';
+    front.style.flexDirection = 'column';
+    front.style.alignItems = 'center';
+    front.style.gap = '16px';
+    back.style.display = 'none';
+    buildDots();
+  }
+
+  function flip() {
+    flipped = !flipped;
+    if (flipped) {
+      front.style.display = 'none';
+      back.style.display = 'flex';
+      back.style.flexDirection = 'column';
+      back.style.alignItems = 'center';
+      back.style.gap = '10px';
+    } else {
+      front.style.display = 'flex';
+      front.style.flexDirection = 'column';
+      front.style.alignItems = 'center';
+      front.style.gap = '16px';
+      back.style.display = 'none';
+    }
+  }
+
+  card.addEventListener('click', flip);
+  document.getElementById('flipBtn').addEventListener('click', flip);
+  document.getElementById('nextBtn').addEventListener('click', () => { i = (i + 1) % cards.length; render(); });
+  document.getElementById('prevBtn').addEventListener('click', () => { i = (i - 1 + cards.length) % cards.length; render(); });
+
+  // swipe support
+  let touchStartX = 0;
+  card.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+  card.addEventListener('touchend', e => {
+    const diff = e.changedTouches[0].screenX - touchStartX;
+    if (Math.abs(diff) > 50) {
+      if (diff < 0) { i = (i + 1) % cards.length; } else { i = (i - 1 + cards.length) % cards.length; }
+      render();
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>
